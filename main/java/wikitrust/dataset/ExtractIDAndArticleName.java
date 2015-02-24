@@ -51,7 +51,7 @@ final class ExtractIDAndArticleName {
 						String articleName = line.substring(index, endIndex);
 						
 						if (namespace == 0) {
-							bw.write(""+id+","+articleName.replaceAll("\\\\", "")+"\n");
+							bw.write(""+id+"\t"+articleName.replaceAll("\\\\", "")+"\n");
 						}
 						
 						index = endIndex+1;
