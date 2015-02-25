@@ -113,7 +113,7 @@ public class RatingStatistics {
 				}
 			}
 			
-			File outputFile = new File("share/data/rating.tsv");
+			File outputFile = new File("share/data/rating");
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
 				for (Integer i : map.keySet()) {
 					ArticleWithRatings a = map.get(i);
