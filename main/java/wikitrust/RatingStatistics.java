@@ -174,6 +174,11 @@ public class RatingStatistics {
 						}
 					}
 					
+					double averageRating = 0;
+					if (totalNumberOfRatings > 0) {
+						averageRating = totalRating/totalNumberOfRatings;
+					}
+					
 					double averageRatingByRegisteredUsers = 0;
 					if (totalNumberOfRatingsByRegisteredUsers > 0) {
 						averageRatingByRegisteredUsers = totalRatingByRegisteredUsers/totalNumberOfRatingsByRegisteredUsers;
@@ -189,7 +194,7 @@ public class RatingStatistics {
 					
 					bw.write(a.getArticleId()+" "+a.getArticleTitle()+" "
 							+numberOfRatings+" "+numberOfRatingsByRegisteredUsers
-							+" "+totalRating/totalNumberOfRatings+" "
+							+" "+averageRating+" "
 							+averageRatingByRegisteredUsers+" "
 							+averageTrustworthy+" "
 							+averageTrustworthyByRegisteredUsers+"\n");
