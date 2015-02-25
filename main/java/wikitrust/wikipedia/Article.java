@@ -7,7 +7,16 @@ package wikitrust.wikipedia;
  */
 public class Article {
 	
-	private int pageId;
-	private String pageTitle;
+	protected int articleId;
+	protected String articleTitle;
+	
+	public int getArticleId() {
+		return articleId;
+	}
+	public String getArticleTitle() {
+		return articleTitle;
+	}
+	
+	
 	
 }
