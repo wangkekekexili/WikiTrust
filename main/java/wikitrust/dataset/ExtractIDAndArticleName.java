@@ -18,8 +18,10 @@ final class ExtractIDAndArticleName {
 	public static void main(String[] args) {
 		Path p = Paths.get("share/raw_data/enwiki-latest-page.sql");
 		Path q = Paths.get("share/data/id_articlename");
-		try (BufferedReader br = Files.newBufferedReader(p);
-				BufferedWriter bw = Files.newBufferedWriter(q, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+		try (
+				BufferedReader br = Files.newBufferedReader(p);
+				BufferedWriter bw = Files.newBufferedWriter(q, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
+				) {
 			String line = null;
 			while ((line=br.readLine())!=null) {
 				if (line.startsWith("INSERT INTO `page` VALUES")) {
