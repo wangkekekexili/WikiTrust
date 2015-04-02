@@ -1,4 +1,4 @@
-package wikitrust;
+package wikitrust.wikipedia.ranking;
 
 import java.io.BufferedWriter;
 import java.io.File;
