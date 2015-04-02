@@ -9,8 +9,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -53,10 +56,40 @@ class ArticleCitations {
 	
 }
 
+class ArticleWordCount {
+	int id;
+	int wordCount;
+	
+	public ArticleWordCount(int id) {
+		this.id = id;
+	}
+	
+	public ArticleWordCount(int id, int wordCount) {
+		this.id = id;
+		this.wordCount = wordCount;
+	}
+	
+	public int getId() {
+		return this.id;
+	}
+	
+	public void setWordCount(int wordCount) {
+		this.wordCount = wordCount;
+	}
+	
+	public int getWordCount() {
+		return this.wordCount;
+	}
+	
+	public String toString() {
+		return ""+this.id+"\t"+this.wordCount;
+	}
+}
+
 public class DumpFileHelper {
 
 	
-	public static void main(String[] args) throws FileNotFoundException, XMLStreamException {
+	public static void extractCitations() throws FileNotFoundException, XMLStreamException {
 		
 		// get computer science ids
 		Set<Integer> computerScienceIds = new HashSet<Integer>();
@@ -108,8 +141,6 @@ public class DumpFileHelper {
 						if (computerScienceIds.contains(currentArticleId) == false) {
 							break;
 						}
-
-						//if (currentArticleId==586) { break; }
 						
 						// the article that we need!
 						ArticleCitations article = new ArticleCitations(currentArticleId);
@@ -200,6 +231,126 @@ public class DumpFileHelper {
 			System.exit(1);
 		}
 		
+	}
+	
+	public static void main(String[] args) throws FileNotFoundException, XMLStreamException {
+		
+		Map<Integer, String> idToName = new HashMap<>();
+		
+		// get computer science ids
+		Set<Integer> computerScienceIds = new HashSet<Integer>();
+		try (BufferedReader br = new BufferedReader(new FileReader(new File("share/data/computer_science_article_names_id")))) {
+			String line = null;
+			while ((line=br.readLine()) != null) {
+				String[] item = line.split(Pattern.quote("\t"));
+				computerScienceIds.add(Integer.parseInt(item[0]));
+				idToName.put(Integer.parseInt(item[0]), item[1]);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		List<ArticleWordCount> computerScienceArticles = new ArrayList<>();
+		XMLInputFactory factory = XMLInputFactory.newInstance();
+
+		File dumpFileDirectory = new File("share/raw_data/dump");
+		for (File dumpFile : dumpFileDirectory.listFiles()) {
+			
+			XMLStreamReader parser = factory.createXMLStreamReader(new FileInputStream(dumpFile));
+
+			
+			while (parser.hasNext()) {
+				
+				int event = parser.next();
+				
+				switch (event) {
+				
+				case XMLStreamConstants.END_DOCUMENT:
+					parser.close();
+					break;
+					
+				case XMLStreamConstants.START_ELEMENT:
+					
+					// parse a namespace, filter out non-zero
+					String tagName = parser.getLocalName();
+					if (tagName.equals("ns")) {
+						parser.next();
+						int namespace = Integer.parseInt(parser.getText());
+						if (namespace != 0) { continue; }
+
+						parser.next();
+						parser.next();
+						parser.next();
+						parser.next();
+						
+						int currentArticleId = Integer.parseInt(parser.getText());
+						if (computerScienceIds.contains(currentArticleId) == false) {
+							break;
+						}
+						
+						// the article that we need!
+						ArticleWordCount article = new ArticleWordCount(currentArticleId);
+						computerScienceArticles.add(article);
+						
+						while (parser.hasNext()) {
+							int iWantStartElementEvent = parser.next();
+							if (iWantStartElementEvent == XMLStreamConstants.START_ELEMENT) {
+								String tagName2 = parser.getLocalName();
+								if (tagName2.equals("text")) {
+									StringBuilder sb = new StringBuilder();
+									while (parser.hasNext()) {
+										parser.next();
+										if (parser.hasText()) {
+											sb.append(parser.getText());
+										} else {
+											break;
+										}
+									}
+									String text = sb.toString().toLowerCase();
+									
+									article.setWordCount(text.length());
+									
+									break;
+								}
+								//flag = false;
+							}
+						}
+					}
+					break;
+				}
+			}
+		}
+		
+		
+		Collections.sort(computerScienceArticles, (e1,e2)->{
+			if (e1.getWordCount() > e2.getWordCount()) {
+				return -1;
+			} else if (e1.getWordCount() < e2.getWordCount()) {
+				return 1;
+			} else {
+				return 0;
+			}
+		});
+		
+		// output result 
+		try (
+				BufferedWriter bw = new BufferedWriter(new FileWriter(new File("share/data/computer_science_word_count")));
+				) {
+			for (ArticleWordCount a : computerScienceArticles) {
+				bw.write(""+a.getId());
+				bw.write("\t");
+				bw.write(idToName.get(a.getId()));
+				bw.write("\t");
+				bw.write(""+a.getWordCount());
+				bw.write("\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+
 	}
 	
 }

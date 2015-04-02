@@ -38,6 +38,15 @@ class Pair {
 	}
 }
 
+class ValuePair<T1, T2> {
+	T1 t1;
+	T2 t2;
+	ValuePair(T1 t1, T2 t2) {
+		this.t1 = t1;
+		this.t2 = t2;
+	}
+}
+
 public class ComputerScienceArticlesHelper {
 
 	/**
@@ -107,7 +116,7 @@ public class ComputerScienceArticlesHelper {
 					Elements as = pageGroup.getElementsByTag("a");
 					for (Element a : as) {
 						String content = a.attr("href");
-						String newUrl = "https://en.wikipedia.org"+content;
+						//String newUrl = "https://en.wikipedia.org"+content;
 						String newArticleName = content.substring(6);
 						currentCategory.addArticleName(newArticleName);
 					}
@@ -262,8 +271,8 @@ public class ComputerScienceArticlesHelper {
 		}
 	}
 	
-	public static void main(String[] args) throws Exception {
-		
+	public static void runPageRank() {
+
 		Map<Integer, String> idToName = new HashMap<>();
 		
 		// get node ids
@@ -331,6 +340,63 @@ public class ComputerScienceArticlesHelper {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
+		}
+
+	}
+	
+	public static void main(String[] args) throws Exception {
+
+		Map<Integer, String> idToName = new HashMap<>();
+		
+		// get node ids
+		List<Integer> nodeIds = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(new File("share/data/computer_science_article_names_id")))) {
+			String line = null;
+			while ((line=br.readLine()) != null) {
+				String[] item = line.split(Pattern.quote("\t"));
+				nodeIds.add(new Integer(item[0]));
+				idToName.put(Integer.parseInt(item[0]), item[1]);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		Map<Integer, Double> rating = new HashMap<>();
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(new File("share/data/ratingOrderByAverageRating.tsv")))) {
+			String line = null;
+			while ((line=br.readLine()) != null) {
+				String[] item = line.split(Pattern.quote("\t"));
+				int currentId = Integer.parseInt(item[0]);
+				if (nodeIds.contains(currentId)) {
+					rating.put(currentId, Double.parseDouble(item[3]));
+				}
+			}
+		}
+		
+		List<ValuePair<Integer, Double>> list = new ArrayList<>();
+		for (Entry<Integer, Double> entry : rating.entrySet()) {
+			list.add(new ValuePair<Integer, Double>(entry.getKey(), entry.getValue()));
+		}
+		Collections.sort(list, (e1,e2)->{
+			if (e1.t2 > e2.t2) {
+				return -1;
+			} else if (e1.t2 < e2.t2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		});
+		
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("share/data/computer_science_rating")))) {
+			for (ValuePair<Integer, Double> pair : list) {
+				bw.write(""+pair.t1+"\t");
+				bw.write(idToName.get(pair.t1));
+				bw.write("\t");
+				bw.write(""+pair.t2);
+				bw.write("\n");
+			}
 		}
 		
 	}
